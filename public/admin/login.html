@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sentinel – Admin Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#1a1a1c] min-h-screen flex items-center justify-center px-4" style="font-size: 16px;">
+  <main class="w-full max-w-sm bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
+    <header class="space-y-1">
+      <h1 class="text-xl font-semibold text-white">Admin Sign In</h1>
+      <p class="text-sm text-gray-400">Enter the admin password to access the Control Center.</p>
+    </header>
+
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+        <input id="password" name="password" type="password" required
+          class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-150">
+      </div>
+      <p id="login-error" class="text-sm text-red-400 hidden"></p>
+      <button type="submit" id="login-submit"
+        class="w-full py-3 px-4 bg-violet-500 text-white font-medium rounded-2xl hover:bg-violet-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1c] min-h-[44px] transition duration-150 active:scale-[0.98]">
+        Sign In
+      </button>
+    </form>
+  </main>
+
+  <script>
+    (function () {
+      var form = document.getElementById('login-form');
+      var passwordInput = document.getElementById('password');
+      var errorEl = document.getElementById('login-error');
+      var submitBtn = document.getElementById('login-submit');
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+        var password = passwordInput.value || '';
+        if (!password.trim()) {
+          errorEl.textContent = 'Password is required.';
+          errorEl.classList.remove('hidden');
+          return;
+        }
+        submitBtn.disabled = true;
+        fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: password })
+        })
+          .then(function (res) {
+            return res.json().then(function (body) {
+              if (!res.ok) throw new Error(body.error || 'Login failed');
+              return body;
+            });
+          })
+          .then(function () {
+            window.location.href = '/admin/';
+          })
+          .catch(function (err) {
+            errorEl.textContent = err.message || 'Login failed';
+            errorEl.classList.remove('hidden');
+          })
+          .finally(function () {
+            submitBtn.disabled = false;
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

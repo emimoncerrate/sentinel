@@ -1,0 +1,23 @@
+{
+  "name": "sentinel",
+  "version": "1.0.0",
+  "description": "The Sentinel Asset Tracker - Admin Control Center",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "asset",
+    "tracker",
+    "admin"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^11.6.0",
+    "dotenv": "^17.2.4",
+    "express": "^4.21.0",
+    "express-session": "^1.19.0",
+    "nodemailer": "^8.0.1"
+  }
+}

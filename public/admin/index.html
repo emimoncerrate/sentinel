@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sentinel – Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      .print-only, .print-only * { visibility: visible; }
+      .print-only { position: absolute; left: 0; top: 0; }
+    }
+    body { overflow-x: hidden; }
+    .safe-area-pb { padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px)); }
+  </style>
+</head>
+<body class="bg-[#1a1a1c] min-h-screen pb-24 text-gray-100 overflow-x-hidden" style="font-size: 16px;">
+  <!-- Sticky header -->
+  <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
+    <div class="px-4 py-3">
+      <h1 class="text-xl font-semibold text-white">Sentinel</h1>
+      <p class="text-sm text-gray-400">Admin</p>
+    </div>
+  </header>
+
+  <main class="px-4 py-4 space-y-4 max-w-lg mx-auto">
+    <!-- KPI Cards: 2×2 + Pending (lavender/red) -->
+    <section aria-label="Stats">
+      <h2 class="sr-only">Stats</h2>
+      <div id="kpi-cards" class="grid grid-cols-2 gap-3">
+        <div class="bg-violet-500 rounded-2xl p-5 text-white transition duration-200">
+          <p class="text-sm text-white/80">Total</p>
+          <p id="stat-total" class="text-2xl font-bold">–</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 transition duration-200">
+          <p class="text-sm text-gray-400">Out</p>
+          <p id="stat-out" class="text-2xl font-bold text-white">–</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 transition duration-200">
+          <p class="text-sm text-gray-400">Overdue</p>
+          <p id="stat-overdue" class="text-2xl font-bold text-white">–</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 transition duration-200">
+          <p class="text-sm text-gray-400">Available</p>
+          <p id="stat-available" class="text-2xl font-bold text-white">–</p>
+        </div>
+        <div id="stat-pending-card" class="col-span-2 bg-violet-600/90 border-2 border-red-500/80 rounded-2xl p-5 text-white transition duration-200">
+          <p class="text-sm text-white/90">Pending Verifications</p>
+          <p id="stat-pending" class="text-2xl font-bold text-red-200">–</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pending Verifications (amber glow, glassmorphism cards) -->
+    <section id="pending-verifications-section" aria-label="Pending verifications" class="rounded-2xl border border-amber-500/40 bg-gray-900/80 backdrop-blur-sm shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+      <h2 class="text-lg font-semibold text-white mb-3 px-4 pt-4">Pending Verifications</h2>
+      <div id="pending-returns-list" class="p-4 space-y-3">
+        <!-- Cards injected by JS -->
+      </div>
+      <p id="pending-returns-empty" class="p-5 text-gray-400 text-center hidden">No items awaiting verification.</p>
+    </section>
+
+    <!-- Active Loans -->
+    <section aria-label="Active loans">
+      <h2 class="text-lg font-semibold text-white mb-3">Active Loans</h2>
+      <div id="active-loans-container" class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+        <div id="active-loans-list" class="divide-y divide-gray-800">
+          <!-- Rows injected by JS -->
+        </div>
+        <p id="active-loans-empty" class="p-5 text-gray-400 text-center hidden">No active loans.</p>
+      </div>
+    </section>
+
+    <!-- Create loan (manual) -->
+    <section aria-label="Create loan manual">
+      <h2 class="text-lg font-semibold text-white mb-3">Create loan (manual)</h2>
+      <form id="manual-loan-form" class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+        <div>
+          <label for="manual-loan-asset" class="block text-sm font-medium text-gray-300 mb-1">Asset</label>
+          <select id="manual-loan-asset" name="asset_id" required
+            class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-150">
+            <option value="">Select an asset</option>
+          </select>
+        </div>
+        <div>
+          <label for="manual-loan-staff-name" class="block text-sm font-medium text-gray-300 mb-1">Staff name (optional)</label>
+          <input type="text" id="manual-loan-staff-name" name="staff_name"
+            class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-150"
+            placeholder="e.g. Jane Doe">
+        </div>
+        <div>
+          <label for="manual-loan-staff-email" class="block text-sm font-medium text-gray-300 mb-1">Staff email (optional)</label>
+          <input type="email" id="manual-loan-staff-email" name="staff_email"
+            class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-150"
+            placeholder="e.g. jane@school.edu">
+        </div>
+        <p id="manual-loan-error" class="text-red-400 text-sm hidden"></p>
+        <button type="submit" id="manual-loan-submit"
+          class="w-full py-3 px-4 bg-violet-500 text-white font-medium rounded-2xl hover:bg-violet-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1c] min-h-[44px] transition duration-150 active:scale-[0.98]">
+          Create loan
+        </button>
+      </form>
+    </section>
+
+    <!-- Add Asset -->
+    <section aria-label="Add asset">
+      <h2 class="text-lg font-semibold text-white mb-3">Add Asset</h2>
+      <form id="add-asset-form" class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+        <div>
+          <label for="asset-id" class="block text-sm font-medium text-gray-300 mb-1">Asset ID</label>
+          <input type="text" id="asset-id" name="id" required
+            class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-150"
+            placeholder="e.g. LAP-001">
+        </div>
+        <div>
+          <label for="asset-type" class="block text-sm font-medium text-gray-300 mb-1">Type</label>
+          <select id="asset-type" name="type" required
+            class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-150">
+            <option value="">Select type</option>
+            <option value="Laptop">Laptop</option>
+            <option value="Charger">Charger</option>
+            <option value="Tablet">Tablet</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <p id="add-asset-error" class="text-red-400 text-sm hidden"></p>
+        <button type="submit" id="add-asset-submit"
+          class="w-full py-3 px-4 bg-violet-500 text-white font-medium rounded-2xl hover:bg-violet-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1c] min-h-[44px] transition duration-150 active:scale-[0.98]">
+          Add Asset
+        </button>
+      </form>
+    </section>
+
+    <!-- Assets & QR -->
+    <section aria-label="Assets and QR codes">
+      <h2 class="text-lg font-semibold text-white mb-3">Assets & QR Codes</h2>
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+        <div class="space-y-3">
+          <label for="assets-search" class="block text-sm font-medium text-gray-300">Search by asset ID</label>
+          <input type="text" id="assets-search" placeholder="Search by asset ID"
+            class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-150">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="assets-filter-type" class="block text-sm font-medium text-gray-300 mb-1">Type</label>
+            <select id="assets-filter-type"
+              class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-150">
+              <option value="">All types</option>
+              <option value="Laptop">Laptop</option>
+              <option value="Charger">Charger</option>
+              <option value="Tablet">Tablet</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="assets-filter-status" class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+            <select id="assets-filter-status"
+              class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-150">
+              <option value="">All statuses</option>
+              <option value="Available">Available</option>
+              <option value="Loaned">Loaned</option>
+              <option value="Pending">Pending</option>
+              <option value="Repair">Repair</option>
+            </select>
+          </div>
+        </div>
+        <div id="assets-qr-list" class="space-y-4">
+          <!-- Asset cards with QR injected by JS -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Fixed bottom bar: Process Returns -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-4 safe-area-pb z-20">
+    <button type="button" id="process-returns-btn" disabled
+      class="w-full py-3 px-4 bg-violet-500 text-white font-medium rounded-2xl hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1c] min-h-[44px] transition duration-150 active:scale-[0.98]">
+      Process Returns
+    </button>
+  </footer>
+
+  <script>
+    const DOMAIN = document.documentElement.getAttribute('data-domain') || window.location.origin;
+  </script>
+  <script src="admin.js"></script>
+</body>
+</html>

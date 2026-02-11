@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" data-domain="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sentinel – Label</title>
+  <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    #label-content {
+      text-align: center;
+      padding: 20px;
+    }
+    #label-content .asset-id {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      word-break: break-all;
+    }
+    #label-error {
+      color: #991b1b;
+      padding: 20px;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #label-content, #label-content * { visibility: visible; }
+      #label-content {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      #label-error { visibility: visible; position: absolute; left: 0; top: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="label-error" style="display: none;"></div>
+  <div id="label-content" style="display: none;">
+    <p id="label-asset-id" class="asset-id" aria-hidden="true"></p>
+    <div id="label-qr"></div>
+  </div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var assetId = (params.get('asset_id') || '').trim();
+
+      if (!assetId) {
+        document.getElementById('label-error').style.display = 'block';
+        document.getElementById('label-error').textContent = 'Missing asset ID';
+        document.title = 'Sentinel – Label (error)';
+        return;
+      }
+
+      document.title = 'Label: ' + assetId;
+      var contentEl = document.getElementById('label-content');
+      var assetIdEl = document.getElementById('label-asset-id');
+      var qrEl = document.getElementById('label-qr');
+      contentEl.style.display = 'block';
+      assetIdEl.textContent = assetId;
+
+      var baseUrl = document.documentElement.getAttribute('data-domain') || window.location.origin;
+      var url = baseUrl + '/checkout?asset_id=' + encodeURIComponent(assetId);
+
+      try {
+        if (typeof QRCode !== 'undefined') {
+          new QRCode(qrEl, { text: url, width: 128, height: 128 });
+        } else {
+          qrEl.innerHTML = '<a href="' + url + '">' + url + '</a>';
+        }
+      } catch (err) {
+        qrEl.innerHTML = '<a href="' + url + '">' + url + '</a>';
+      }
+
+      setTimeout(function () {
+        window.print();
+        window.close();
+      }, 200);
+    })();
+  </script>
+</body>
+</html>
