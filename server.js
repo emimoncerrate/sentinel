@@ -38,6 +38,20 @@ app.post('/api/admin/logout', handleLogout);
 // Public checkout API (no auth)
 app.use('/api/checkout', checkoutRoutes);
 
+// Redirect legacy /checkout to gateway; allow /welcome and /form without trailing slash
+app.get('/checkout', (req, res) => {
+  const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  res.redirect(302, '/welcome/' + q);
+});
+app.get('/welcome', (req, res) => {
+  const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  res.redirect(302, '/welcome/' + (q ? '?' + q.slice(1) : ''));
+});
+app.get('/form', (req, res) => {
+  const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  res.redirect(302, '/form/' + (q ? '?' + q.slice(1) : ''));
+});
+
 // Protected admin UI
 app.use('/admin', requireHtmlAuth, express.static(path.join(__dirname, 'public', 'admin')));
 

@@ -76,7 +76,7 @@
       assetIdEl.textContent = assetId;
 
       var baseUrl = document.documentElement.getAttribute('data-domain') || window.location.origin;
-      var url = baseUrl + '/checkout?asset_id=' + encodeURIComponent(assetId);
+      var url = baseUrl + '/welcome?asset_id=' + encodeURIComponent(assetId);
 
       try {
         if (typeof QRCode !== 'undefined') {

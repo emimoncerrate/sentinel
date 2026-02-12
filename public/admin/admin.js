@@ -273,7 +273,7 @@
       return;
     }
     assets.forEach(function (asset) {
-      var url = baseUrl + '/checkout?asset_id=' + encodeURIComponent(asset.id);
+      var url = baseUrl + '/welcome?asset_id=' + encodeURIComponent(asset.id);
       var card = document.createElement('div');
       card.className = 'bg-gray-800/50 border border-gray-700 rounded-2xl p-4 flex flex-wrap items-start gap-4 transition-colors duration-150';
       var info = document.createElement('div');

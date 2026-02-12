@@ -2,7 +2,7 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const dataDir = path.join(__dirname, 'data');
+const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
 const dbPath = path.join(dataDir, 'sentinel.db');
 
 if (!fs.existsSync(dataDir)) {
@@ -28,6 +28,17 @@ CREATE TABLE IF NOT EXISTS loans (
   due_date TEXT NOT NULL,
   in_date TEXT,
   returned_at TEXT,
+  FOREIGN KEY (asset_id) REFERENCES assets(id)
+);
+
+CREATE TABLE IF NOT EXISTS reservations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  asset_id TEXT NOT NULL REFERENCES assets(id),
+  staff_name TEXT,
+  staff_email TEXT,
+  reserved_start TEXT NOT NULL,
+  reserved_end TEXT,
+  created_at TEXT NOT NULL,
   FOREIGN KEY (asset_id) REFERENCES assets(id)
 );
 `;
@@ -80,7 +91,25 @@ function runMigration1() {
   db.prepare('INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (1, ?)').run('pending_and_returned_at');
 }
 
+function runMigration2() {
+  if (hasMigrationRun(2)) return;
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS reservations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      asset_id TEXT NOT NULL REFERENCES assets(id),
+      staff_name TEXT,
+      staff_email TEXT,
+      reserved_start TEXT NOT NULL,
+      reserved_end TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (asset_id) REFERENCES assets(id)
+    )
+  `);
+  db.prepare('INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (2, ?)').run('reservations_table');
+}
+
 runMigration1();
+runMigration2();
 
 function getDb() {
   return db;

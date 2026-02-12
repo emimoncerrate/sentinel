@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Sentinel – Form</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#1a1a1c] min-h-screen text-gray-100 overflow-x-hidden" style="font-size: 16px;">
+  <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
+    <div class="px-4 py-3">
+      <h1 class="text-xl font-semibold text-white">The Sentinel</h1>
+      <p class="mt-2 inline-block rounded-full border border-violet-400 bg-violet-500/20 px-3 py-1 text-sm text-violet-200">
+        Device: <span id="header-asset-id">–</span>
+      </p>
+    </div>
+  </header>
+
+  <main class="px-4 py-6 max-w-lg mx-auto">
+    <div id="form-error" class="hidden rounded-xl bg-red-900/20 border border-red-500/50 text-red-400 px-4 py-3 text-sm mb-4" role="alert"></div>
+
+    <form id="action-form" class="space-y-4">
+      <div>
+        <label for="asset-id" class="block text-sm font-medium text-gray-400 mb-1">Asset ID</label>
+        <input type="text" id="asset-id" readonly
+          class="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-gray-400 rounded-xl cursor-not-allowed">
+      </div>
+      <div>
+        <label for="staff-name" class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
+        <input type="text" id="staff-name" name="staff_name" required autocomplete="name"
+          class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+      </div>
+      <div>
+        <label for="staff-email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+        <input type="email" id="staff-email" name="staff_email" required autocomplete="email"
+          class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+      </div>
+      <div id="reserve-datetime-wrap" class="hidden">
+        <label for="reserved-start" class="block text-sm font-medium text-gray-300 mb-1">When do you need this?</label>
+        <input type="datetime-local" id="reserved-start" name="reserved_start" required
+          class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+      </div>
+      <button type="submit" id="submit-btn" class="w-full py-3 px-4 bg-violet-500 text-white font-medium rounded-2xl hover:bg-violet-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 min-h-[44px] transition duration-150">
+        Submit
+      </button>
+    </form>
+
+    <section id="success-section" class="hidden rounded-2xl bg-gray-900 border border-gray-800 p-6 mt-6" aria-live="polite">
+      <h2 id="success-title" class="text-lg font-semibold text-white mb-2"></h2>
+      <p id="success-message" class="text-gray-400"></p>
+    </section>
+  </main>
+
+  <script src="form.js"></script>
+</body>
+</html>

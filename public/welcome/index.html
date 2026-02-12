@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Sentinel – Device</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-[#1a1a1c] min-h-screen text-gray-100 overflow-x-hidden" style="font-size: 16px;">
+  <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
+    <div class="px-4 py-4">
+      <h1 class="text-xl font-semibold text-white">The Sentinel</h1>
+      <p id="device-chip" class="mt-2 inline-block rounded-full border border-violet-400 bg-violet-500/20 px-3 py-1 text-sm text-violet-200">
+        Device Identified: <span id="asset-id-label">–</span>
+      </p>
+      <p id="device-error" class="mt-2 text-red-400 text-sm hidden">Missing device ID.</p>
+    </div>
+  </header>
+
+  <main class="px-4 py-6 max-w-lg mx-auto">
+    <div id="cards-grid" class="flex flex-col gap-4 md:grid md:grid-cols-3 md:gap-4">
+      <a id="card-checkout" href="#" class="rounded-2xl p-6 flex flex-col items-center text-center min-h-[140px] justify-center transition duration-200 bg-[#C4B5FD] text-gray-900 hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1c]">
+        <i data-lucide="hand-metal" class="w-10 h-10 mb-2" aria-hidden="true"></i>
+        <span class="font-medium">Check-Out (Borrow)</span>
+        <span class="text-sm mt-1 opacity-90">Taking this device now.</span>
+      </a>
+      <a id="card-checkin" href="#" class="rounded-2xl p-6 flex flex-col items-center text-center min-h-[140px] justify-center transition duration-200 bg-gray-900 border-2 border-violet-400 text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1c]">
+        <i data-lucide="package-check" class="w-10 h-10 mb-2 text-violet-300" aria-hidden="true"></i>
+        <span class="font-medium">Check-In (Return)</span>
+        <span class="text-sm text-gray-400 mt-1">Returning this device now.</span>
+      </a>
+      <a id="card-reserve" href="#" class="rounded-2xl p-6 flex flex-col items-center text-center min-h-[140px] justify-center transition duration-200 bg-white/5 backdrop-blur-sm border border-white/10 text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1c]">
+        <i data-lucide="calendar" class="w-10 h-10 mb-2 text-violet-300" aria-hidden="true"></i>
+        <span class="font-medium">Reservation</span>
+        <span class="text-sm text-gray-400 mt-1">Book this for a later date.</span>
+      </a>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var assetId = (params.get('asset_id') || params.get('id') || '').trim();
+      var formBase = '/form';
+
+      var chip = document.getElementById('device-chip');
+      var errorEl = document.getElementById('device-error');
+      var labelEl = document.getElementById('asset-id-label');
+      var cardsGrid = document.getElementById('cards-grid');
+      var cardCheckout = document.getElementById('card-checkout');
+      var cardCheckin = document.getElementById('card-checkin');
+      var cardReserve = document.getElementById('card-reserve');
+
+      function setHref(el, type) {
+        if (!assetId) {
+          el.removeAttribute('href');
+          el.style.pointerEvents = 'none';
+          el.style.opacity = '0.6';
+          return;
+        }
+        el.href = formBase + '/?type=' + type + '&id=' + encodeURIComponent(assetId);
+      }
+
+      if (!assetId) {
+        chip.classList.add('hidden');
+        errorEl.classList.remove('hidden');
+        cardsGrid.style.opacity = '0.6';
+        cardsGrid.style.pointerEvents = 'none';
+      } else {
+        labelEl.textContent = assetId;
+        setHref(cardCheckout, 'checkout');
+        setHref(cardCheckin, 'checkin');
+        setHref(cardReserve, 'reserve');
+      }
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    })();
+  </script>
+</body>
+</html>

@@ -129,4 +129,86 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+const RESERVATION_DURATION_DAYS = 7;
+
+// POST /api/checkout/reserve — book device for a future date; asset stays Available; conflict if Loaned or overlapping reservation
+router.post('/reserve', (req, res, next) => {
+  try {
+    const body = req.body || {};
+    const asset_id = typeof body.asset_id === 'string' ? body.asset_id.trim() : '';
+    const staff_name = typeof body.staff_name === 'string' ? body.staff_name.trim() : '';
+    const staff_email = typeof body.staff_email === 'string' ? body.staff_email.trim() : '';
+    const reserved_start = typeof body.reserved_start === 'string' ? body.reserved_start.trim() : '';
+
+    if (!asset_id) {
+      return res.status(400).json({ error: 'asset_id is required' });
+    }
+    if (!staff_name) {
+      return res.status(400).json({ error: 'staff_name is required' });
+    }
+    if (!staff_email) {
+      return res.status(400).json({ error: 'staff_email is required' });
+    }
+    if (!staff_email.includes('@') || !staff_email.includes('.')) {
+      return res.status(400).json({ error: 'Please enter a valid email address' });
+    }
+    if (!reserved_start) {
+      return res.status(400).json({ error: 'reserved_start is required' });
+    }
+    const startDate = new Date(reserved_start);
+    if (isNaN(startDate.getTime())) {
+      return res.status(400).json({ error: 'reserved_start must be a valid date/time' });
+    }
+    if (startDate <= new Date()) {
+      return res.status(400).json({ error: 'Reservation must be for a future date/time' });
+    }
+
+    const asset = db.prepare('SELECT id, type, status FROM assets WHERE id = ?').get(asset_id);
+    if (!asset) {
+      return res.status(404).json({ error: 'Asset not found' });
+    }
+    if (asset.status === 'Loaned') {
+      return res.status(409).json({ error: 'Device is currently on loan.' });
+    }
+    if (asset.status !== 'Available') {
+      return res.status(409).json({ error: 'Device unavailable for this date/time.' });
+    }
+
+    const reservedEnd = new Date(startDate);
+    reservedEnd.setDate(reservedEnd.getDate() + RESERVATION_DURATION_DAYS);
+    const reserved_end = reservedEnd.toISOString();
+
+    const overlapping = db
+      .prepare(
+        `SELECT 1 FROM reservations
+         WHERE asset_id = ?
+         AND reserved_start < ?
+         AND COALESCE(reserved_end, datetime(reserved_start, '+' || ? || ' days')) > ?`
+      )
+      .get(asset_id, reserved_end, RESERVATION_DURATION_DAYS, reserved_start);
+    if (overlapping) {
+      return res.status(409).json({ error: 'Device unavailable for this date/time.' });
+    }
+
+    const created_at = new Date().toISOString();
+    const insert = db.prepare(
+      'INSERT INTO reservations (asset_id, staff_name, staff_email, reserved_start, reserved_end, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    );
+    insert.run(asset_id, staff_name, staff_email, reserved_start, reserved_end, created_at);
+    const id = db.prepare('SELECT last_insert_rowid() as id').get().id;
+    const reservation = {
+      id,
+      asset_id,
+      staff_name,
+      staff_email,
+      reserved_start,
+      reserved_end,
+      created_at,
+    };
+    res.status(201).json({ ok: true, reservation });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
