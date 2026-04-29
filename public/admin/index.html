@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+  <script src="/config.js"></script>
   <style>
     @media print {
       body * { visibility: hidden; }
@@ -183,7 +184,7 @@
   </footer>
 
   <script>
-    const DOMAIN = document.documentElement.getAttribute('data-domain') || window.location.origin;
+    const DOMAIN = (typeof window.SENTINEL_DOMAIN === 'string' && window.SENTINEL_DOMAIN) || document.documentElement.getAttribute('data-domain') || window.location.origin;
   </script>
   <script src="admin.js"></script>
 </body>

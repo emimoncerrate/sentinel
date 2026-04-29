@@ -263,7 +263,7 @@
   function renderAssets(assets) {
     var listEl = document.getElementById('assets-qr-list');
     if (!listEl) return;
-    var baseUrl = document.documentElement.getAttribute('data-domain') || window.location.origin;
+    var baseUrl = (typeof window.SENTINEL_DOMAIN === 'string' && window.SENTINEL_DOMAIN) || document.documentElement.getAttribute('data-domain') || window.location.origin;
     listEl.innerHTML = '';
     if (!assets.length) {
       var empty = document.createElement('p');

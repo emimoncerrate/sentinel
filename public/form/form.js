@@ -6,6 +6,7 @@
   var form = document.getElementById('action-form');
   var formError = document.getElementById('form-error');
   var assetIdInput = document.getElementById('asset-id');
+  var assetIdLabel = document.getElementById('asset-id-label');
   var headerAssetId = document.getElementById('header-asset-id');
   var reserveWrap = document.getElementById('reserve-datetime-wrap');
   var reservedStartInput = document.getElementById('reserved-start');
@@ -31,12 +32,22 @@
     reservedStartInput.min = year + '-' + month + '-' + day + 'T' + hour + ':' + minute;
   }
 
-  if (!validTypes[type] || !assetId) {
-    showError(type ? 'Missing device ID in URL.' : 'Invalid or missing action type.');
+  if (!validTypes[type]) {
+    showError('Invalid or missing action type.');
     if (form) form.style.display = 'none';
   } else {
-    assetIdInput.value = assetId;
-    headerAssetId.textContent = assetId;
+    if (assetId) {
+      assetIdInput.value = assetId;
+      assetIdInput.readOnly = true;
+      assetIdInput.classList.add('text-gray-400', 'cursor-not-allowed');
+      assetIdLabel.textContent = 'Asset ID (preselected)';
+      headerAssetId.textContent = assetId;
+    } else {
+      assetIdInput.readOnly = false;
+      assetIdInput.placeholder = 'Enter Asset ID';
+      assetIdLabel.textContent = 'Asset ID';
+      headerAssetId.textContent = 'Enter Asset ID';
+    }
 
     if (type === 'checkout') {
       submitBtn.textContent = 'Confirm Loan';
@@ -53,9 +64,14 @@
     e.preventDefault();
     showError('');
 
+    var enteredAssetId = (assetIdInput.value || '').trim();
     var name = (document.getElementById('staff-name').value || '').trim();
     var email = (document.getElementById('staff-email').value || '').trim();
 
+    if (!enteredAssetId) {
+      showError('Please enter the Asset ID.');
+      return;
+    }
     if (!name) {
       showError('Please enter your full name.');
       return;
@@ -85,7 +101,7 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting…';
 
-    var body = { asset_id: assetId, staff_name: name, staff_email: email };
+    var body = { asset_id: enteredAssetId, staff_name: name, staff_email: email };
     var url = '/api/checkout';
     if (type === 'checkin') {
       url += '/checkin';
@@ -109,7 +125,7 @@
               var dueStr = data.loan && data.loan.due_date
                 ? new Date(data.loan.due_date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
                 : '';
-              successMessage.textContent = 'Asset: ' + (data.asset ? data.asset.id : assetId) + '. Due date: ' + dueStr + '. ' + (data.emailSent !== false ? 'A receipt has been sent to your email.' : 'Receipt could not be sent by email.');
+              successMessage.textContent = 'Asset: ' + (data.asset ? data.asset.id : enteredAssetId) + '. Due date: ' + dueStr + '. ' + (data.emailSent !== false ? 'A receipt has been sent to your email.' : 'Receipt could not be sent by email.');
             } else if (type === 'checkin') {
               successTitle.textContent = 'Return logged!';
               successMessage.textContent = 'Please place the device on the designated shelf for Admin verification.';

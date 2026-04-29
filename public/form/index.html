@@ -11,7 +11,7 @@
     <div class="px-4 py-3">
       <h1 class="text-xl font-semibold text-white">The Sentinel</h1>
       <p class="mt-2 inline-block rounded-full border border-violet-400 bg-violet-500/20 px-3 py-1 text-sm text-violet-200">
-        Device: <span id="header-asset-id">–</span>
+        Device: <span id="header-asset-id">Enter Asset ID</span>
       </p>
     </div>
   </header>
@@ -21,9 +21,9 @@
 
     <form id="action-form" class="space-y-4">
       <div>
-        <label for="asset-id" class="block text-sm font-medium text-gray-400 mb-1">Asset ID</label>
-        <input type="text" id="asset-id" readonly
-          class="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-gray-400 rounded-xl cursor-not-allowed">
+        <label for="asset-id" id="asset-id-label" class="block text-sm font-medium text-gray-300 mb-1">Asset ID</label>
+        <input type="text" id="asset-id" name="asset_id" required
+          class="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
       </div>
       <div>
         <label for="staff-name" class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>

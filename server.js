@@ -30,6 +30,13 @@ app.use(
   })
 );
 
+// Public config for client-side base URL (QR codes, links) - must be before admin static
+app.get('/config.js', (req, res) => {
+  const domain = process.env.DOMAIN || '';
+  res.type('application/javascript');
+  res.send('window.SENTINEL_DOMAIN=' + JSON.stringify(domain) + ';');
+});
+
 // Auth routes
 app.get('/admin/login', sendLoginPage);
 app.post('/api/admin/login', handleLogin);
@@ -39,17 +46,27 @@ app.post('/api/admin/logout', handleLogout);
 app.use('/api/checkout', checkoutRoutes);
 
 // Redirect legacy /checkout to gateway; allow /welcome and /form without trailing slash
-app.get('/checkout', (req, res) => {
+app.get(/^\/checkout$/, (req, res) => {
   const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
   res.redirect(302, '/welcome/' + q);
 });
-app.get('/welcome', (req, res) => {
+app.get(/^\/checkout\/$/, (req, res) => {
+  const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  res.redirect(302, '/welcome/' + q);
+});
+app.get(/^\/welcome$/, (req, res) => {
   const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
   res.redirect(302, '/welcome/' + (q ? '?' + q.slice(1) : ''));
 });
-app.get('/form', (req, res) => {
+app.get(/^\/welcome\/$/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'welcome', 'index.html'));
+});
+app.get(/^\/form$/, (req, res) => {
   const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
   res.redirect(302, '/form/' + (q ? '?' + q.slice(1) : ''));
+});
+app.get(/^\/form\/$/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'form', 'index.html'));
 });
 
 // Protected admin UI
