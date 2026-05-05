@@ -1,6 +1,7 @@
-require('dotenv').config();
-const express = require('express');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+const express = require('express');
+const { logSmtpStartup } = require('./lib/email');
 const session = require('express-session');
 const adminRoutes = require('./routes/admin');
 const checkoutRoutes = require('./routes/checkout');
@@ -85,5 +86,6 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Sentinel admin server running at http://localhost:${PORT}`);
+  logSmtpStartup();
 });
 

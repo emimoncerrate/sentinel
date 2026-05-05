@@ -4,6 +4,30 @@ const { db } = require('../database');
 const { createLoan } = require('../services/loans');
 const { sendLoanReceipt } = require('../lib/email');
 
+function parseLoanDays(rawValue) {
+  if (rawValue === undefined || rawValue === null || rawValue === '') return null;
+  const n = parseInt(String(rawValue), 10);
+  if (!Number.isInteger(n) || n <= 0) return null;
+  return n;
+}
+
+// GET /api/checkout/assets?borrow=laptop|other — list Available assets for staff dropdown
+router.get('/assets', (req, res, next) => {
+  try {
+    const borrow = String(req.query.borrow || '').toLowerCase();
+    const allAvailable = db.prepare("SELECT id, type, status FROM assets WHERE status = 'Available' ORDER BY id ASC").all();
+    const filtered = allAvailable.filter((asset) => {
+      const type = String(asset.type || '').toLowerCase();
+      if (borrow === 'other') return type !== 'laptop';
+      if (borrow === 'laptop') return type === 'laptop';
+      return true;
+    });
+    res.json(filtered);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/checkout/asset?asset_id=... or ?id=... — returns { id, type, status } so client can branch (Available=checkout, Loaned=check-in, Pending/Repair=message)
 router.get('/asset', (req, res, next) => {
   try {
@@ -83,6 +107,7 @@ router.post('/', async (req, res, next) => {
     const asset_id = typeof body.asset_id === 'string' ? body.asset_id.trim() : '';
     const staff_name = typeof body.staff_name === 'string' ? body.staff_name.trim() : '';
     const staff_email = typeof body.staff_email === 'string' ? body.staff_email.trim() : '';
+    const loan_days = parseLoanDays(body.loan_days);
 
     if (!asset_id) {
       return res.status(400).json({ error: 'asset_id is required' });
@@ -96,10 +121,13 @@ router.post('/', async (req, res, next) => {
     if (!staff_email.includes('@') || !staff_email.includes('.')) {
       return res.status(400).json({ error: 'Please enter a valid email address' });
     }
+    if (body.loan_days !== undefined && loan_days == null) {
+      return res.status(400).json({ error: 'loan_days must be a positive integer' });
+    }
 
     let result;
     try {
-      result = createLoan({ assetId: asset_id, staffName: staff_name, staffEmail: staff_email });
+      result = createLoan({ assetId: asset_id, staffName: staff_name, staffEmail: staff_email, loanDays: loan_days || undefined });
     } catch (err) {
       if (err.statusCode === 404) {
         return res.status(404).json({ error: err.message });
@@ -117,6 +145,7 @@ router.post('/', async (req, res, next) => {
       assetType: result.asset.type,
       outDate: result.loan.out_date,
       dueDate: result.loan.due_date,
+      loanDays: loan_days || undefined,
     });
 
     res.status(201).json({

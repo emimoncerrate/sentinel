@@ -2,7 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../database');
 const { createLoan } = require('../services/loans');
-const { sendReturnReceipt } = require('../lib/email');
+const { sendLoanReceipt, sendReturnReceipt } = require('../lib/email');
+
+function parseLoanDays(rawValue) {
+  if (rawValue === undefined || rawValue === null || rawValue === '') return null;
+  const n = parseInt(String(rawValue), 10);
+  if (!Number.isInteger(n) || n <= 0) return null;
+  return n;
+}
 
 router.get('/stats', (req, res, next) => {
   try {
@@ -160,25 +167,46 @@ router.post('/return', (req, res, next) => {
   }
 });
 
-router.post('/loans', (req, res, next) => {
+router.post('/loans', async (req, res, next) => {
   try {
     const { asset_id, staff_name, staff_email } = req.body || {};
     const assetIdStr = typeof asset_id === 'string' ? asset_id.trim() : '';
     const staffNameStr = typeof staff_name === 'string' ? staff_name.trim() : '';
     const staffEmailStr = typeof staff_email === 'string' ? staff_email.trim() : '';
+    const loanDays = parseLoanDays(req.body && req.body.loan_days);
     if (!assetIdStr) {
       return res.status(400).json({ error: 'asset_id is required' });
     }
+    if (req.body && req.body.loan_days !== undefined && loanDays == null) {
+      return res.status(400).json({ error: 'loan_days must be a positive integer' });
+    }
     let result;
     try {
-      result = createLoan({ assetId: assetIdStr, staffName: staffNameStr, staffEmail: staffEmailStr });
+      result = createLoan({
+        assetId: assetIdStr,
+        staffName: staffNameStr,
+        staffEmail: staffEmailStr,
+        loanDays: loanDays || undefined,
+      });
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 409) {
         return res.status(400).json({ error: err.message });
       }
       throw err;
     }
-    res.status(201).json(result.loan);
+    let emailSent = false;
+    if (staffEmailStr) {
+      emailSent = await sendLoanReceipt({
+        staffEmail: staffEmailStr,
+        staffName: staffNameStr,
+        assetId: result.asset.id,
+        assetType: result.asset.type,
+        outDate: result.loan.out_date,
+        dueDate: result.loan.due_date,
+        loanDays: loanDays || undefined,
+      });
+    }
+    res.status(201).json({ loan: result.loan, emailSent });
   } catch (err) {
     next(err);
   }

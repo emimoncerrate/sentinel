@@ -1,14 +1,14 @@
 const { db } = require('../database');
 
-const LOAN_DURATION_DAYS = 7;
+const DEFAULT_LOAN_DURATION_DAYS = 7;
 
 /**
  * Create a loan for an asset. Validates asset exists and is Available; runs in a transaction.
- * @param {{ assetId: string, staffName: string, staffEmail: string }}
+ * @param {{ assetId: string, staffName: string, staffEmail: string, loanDays?: number }}
  * @returns {{ loan: object, asset: { id, type, status } }}
  * @throws {{ statusCode: number, message: string }} 404 if asset not found, 409 if not available
  */
-function createLoan({ assetId, staffName, staffEmail }) {
+function createLoan({ assetId, staffName, staffEmail, loanDays }) {
   const asset = db.prepare('SELECT id, type, status FROM assets WHERE id = ?').get(assetId);
   if (!asset) {
     const err = new Error('Asset not found');
@@ -22,8 +22,9 @@ function createLoan({ assetId, staffName, staffEmail }) {
   }
 
   const out_date = new Date().toISOString();
+  const days = Number.isInteger(loanDays) && loanDays > 0 ? loanDays : DEFAULT_LOAN_DURATION_DAYS;
   const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + LOAN_DURATION_DAYS);
+  dueDate.setDate(dueDate.getDate() + days);
   const due_date = dueDate.toISOString();
 
   const insertLoan = db.prepare(
@@ -54,4 +55,4 @@ function createLoan({ assetId, staffName, staffEmail }) {
   };
 }
 
-module.exports = { createLoan, LOAN_DURATION_DAYS };
+module.exports = { createLoan, DEFAULT_LOAN_DURATION_DAYS };

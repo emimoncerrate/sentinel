@@ -20,10 +20,17 @@
     <div id="form-error" class="hidden rounded-xl bg-red-900/20 border border-red-500/50 text-red-400 px-4 py-3 text-sm mb-4" role="alert"></div>
 
     <form id="action-form" class="space-y-4">
-      <div>
+      <div id="asset-id-input-wrap">
         <label for="asset-id" id="asset-id-label" class="block text-sm font-medium text-gray-300 mb-1">Asset ID</label>
         <input type="text" id="asset-id" name="asset_id" required
           class="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+      </div>
+      <div id="asset-id-select-wrap" class="hidden">
+        <label for="asset-id-select" id="asset-id-select-label" class="block text-sm font-medium text-gray-300 mb-1">Asset ID</label>
+        <select id="asset-id-select" name="asset_id_select"
+          class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+          <option value="">Select an asset</option>
+        </select>
       </div>
       <div>
         <label for="staff-name" class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
@@ -34,6 +41,27 @@
         <label for="staff-email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
         <input type="email" id="staff-email" name="staff_email" required autocomplete="email"
           class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+      </div>
+      <div id="loan-duration-wrap">
+        <label for="loan-duration-type" class="block text-sm font-medium text-gray-300 mb-1">How many days do you need the loaner?</label>
+        <select id="loan-duration-type" name="loan_duration_type"
+          class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+          <option value="1">1 day</option>
+          <option value="2">2 days</option>
+          <option value="custom">Custom range</option>
+        </select>
+      </div>
+      <div id="loan-custom-range-wrap" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label for="loan-custom-start" class="block text-sm font-medium text-gray-300 mb-1">Start date</label>
+          <input type="date" id="loan-custom-start" name="loan_custom_start"
+            class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+        </div>
+        <div>
+          <label for="loan-custom-end" class="block text-sm font-medium text-gray-300 mb-1">End date</label>
+          <input type="date" id="loan-custom-end" name="loan_custom_end"
+            class="w-full px-4 py-3 min-h-[44px] bg-gray-800 border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
+        </div>
       </div>
       <div id="reserve-datetime-wrap" class="hidden">
         <label for="reserved-start" class="block text-sm font-medium text-gray-300 mb-1">When do you need this?</label>

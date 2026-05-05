@@ -2,6 +2,17 @@
   var currentAssets = [];
   var assetFilters = { type: '', status: '', q: '' };
 
+  function toDateOnlyIso(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function setManualLoanDateRangeMins(startInput, endInput) {
+    if (!startInput || !endInput) return;
+    var today = toDateOnlyIso(new Date());
+    startInput.min = today;
+    endInput.min = startInput.value || today;
+  }
+
   function formatDate(iso) {
     if (!iso) return '–';
     var d = new Date(iso);
@@ -338,11 +349,31 @@
     var assetSelect = document.getElementById('manual-loan-asset');
     var staffNameInput = document.getElementById('manual-loan-staff-name');
     var staffEmailInput = document.getElementById('manual-loan-staff-email');
+    var durationTypeInput = document.getElementById('manual-loan-duration-type');
+    var customStartInput = document.getElementById('manual-loan-custom-start');
+    var customEndInput = document.getElementById('manual-loan-custom-end');
     var errorEl = document.getElementById('manual-loan-error');
     var submitBtn = document.getElementById('manual-loan-submit');
     var asset_id = (assetSelect && assetSelect.value) ? assetSelect.value.trim() : '';
     var staff_name = (staffNameInput && staffNameInput.value) ? staffNameInput.value.trim() : '';
     var staff_email = (staffEmailInput && staffEmailInput.value) ? staffEmailInput.value.trim() : '';
+    var durationType = (durationTypeInput && durationTypeInput.value) ? durationTypeInput.value : '1';
+    var loanDays = parseInt(durationType, 10);
+    if (durationType === 'custom') {
+      var startRaw = (customStartInput && customStartInput.value) ? customStartInput.value.trim() : '';
+      var endRaw = (customEndInput && customEndInput.value) ? customEndInput.value.trim() : '';
+      if (startRaw && endRaw) {
+        var start = new Date(startRaw + 'T00:00:00');
+        var end = new Date(endRaw + 'T00:00:00');
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
+          loanDays = Math.floor((end.getTime() - start.getTime()) / 86400000) + 1;
+        } else {
+          loanDays = NaN;
+        }
+      } else {
+        loanDays = NaN;
+      }
+    }
     errorEl.classList.add('hidden');
     errorEl.textContent = '';
     if (!asset_id) {
@@ -350,11 +381,21 @@
       errorEl.classList.remove('hidden');
       return;
     }
+    if (!Number.isInteger(loanDays) || loanDays <= 0) {
+      errorEl.textContent = 'Please choose a valid loan duration.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
     submitBtn.disabled = true;
     fetch('/api/admin/loans', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ asset_id: asset_id, staff_name: staff_name || undefined, staff_email: staff_email || undefined })
+      body: JSON.stringify({
+        asset_id: asset_id,
+        staff_name: staff_name || undefined,
+        staff_email: staff_email || undefined,
+        loan_days: loanDays
+      })
     })
       .then(function (res) {
         return res.json().then(function (body) {
@@ -364,6 +405,7 @@
       })
       .then(function () {
         form.reset();
+        syncManualLoanDurationUI();
         loadDashboard();
       })
       .catch(function (err) {
@@ -428,10 +470,48 @@
 
   window.loadDashboard = loadDashboard;
 
+  function syncManualLoanDurationUI() {
+    var durationTypeInput = document.getElementById('manual-loan-duration-type');
+    var customWrap = document.getElementById('manual-loan-custom-range-wrap');
+    var customStartInput = document.getElementById('manual-loan-custom-start');
+    var customEndInput = document.getElementById('manual-loan-custom-end');
+    if (!durationTypeInput || !customWrap || !customStartInput || !customEndInput) return;
+    var isCustom = durationTypeInput.value === 'custom';
+    customWrap.classList.toggle('hidden', !isCustom);
+    customStartInput.required = isCustom;
+    customEndInput.required = isCustom;
+    customStartInput.disabled = !isCustom;
+    customEndInput.disabled = !isCustom;
+    if (!isCustom) {
+      customStartInput.value = '';
+      customEndInput.value = '';
+      return;
+    }
+    setManualLoanDateRangeMins(customStartInput, customEndInput);
+    if (customStartInput.value) {
+      customEndInput.min = customStartInput.value;
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     loadDashboard();
     document.getElementById('process-returns-btn').addEventListener('click', processReturns);
     document.getElementById('manual-loan-form').addEventListener('submit', submitManualLoan);
+    var manualLoanDurationType = document.getElementById('manual-loan-duration-type');
+    if (manualLoanDurationType) {
+      manualLoanDurationType.addEventListener('change', syncManualLoanDurationUI);
+      syncManualLoanDurationUI();
+    }
+    var manualLoanCustomStart = document.getElementById('manual-loan-custom-start');
+    var manualLoanCustomEnd = document.getElementById('manual-loan-custom-end');
+    if (manualLoanCustomStart && manualLoanCustomEnd) {
+      manualLoanCustomStart.addEventListener('change', function () {
+        setManualLoanDateRangeMins(manualLoanCustomStart, manualLoanCustomEnd);
+        if (manualLoanCustomEnd.value && manualLoanCustomEnd.value < manualLoanCustomStart.value) {
+          manualLoanCustomEnd.value = manualLoanCustomStart.value;
+        }
+      });
+    }
     document.getElementById('add-asset-form').addEventListener('submit', submitAddAsset);
     var searchEl = document.getElementById('assets-search');
     var typeEl = document.getElementById('assets-filter-type');
