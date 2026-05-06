@@ -1,5 +1,10 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+const fs = require('fs');
+const envPath = path.join(__dirname, '.env');
+// Render/production uses dashboard env vars only — no committed .env, so skip dotenv noise.
+if (fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
+}
 const express = require('express');
 const { logSmtpStartup } = require('./lib/email');
 const session = require('express-session');
