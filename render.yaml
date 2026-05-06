@@ -7,10 +7,14 @@ services:
     runtime: node
     region: oregon
     plan: free
-    buildCommand: npm ci
+    # Prefer npm install for Linux/Render — less brittle than npm ci if lock drift; native addons still compile.
+    buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /healthz
     envVars:
+      # Pin major version so better-sqlite3 gets matching prebuilt binaries (avoids failed node-gyp on some stacks)
+      - key: NODE_VERSION
+        value: "20.18.1"
       - key: NODE_ENV
         value: production
       - key: TRUST_PROXY
