@@ -1,0 +1,40 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# After connecting the repo, adjust `name`, `region`, and `plan` if needed.
+
+services:
+  - type: web
+    name: sentinel
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      # Required — public https URL of this service (no trailing slash). Used for QR codes / config.js
+      - key: DOMAIN
+        sync: false
+      # Required — openssl rand -hex 32
+      - key: SESSION_SECRET
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # SQLite: default ./data is ephemeral on redeploy. Attach a disk + set DATA_DIR to persist (paid plans).
+      # - key: DATA_DIR
+      #   value: /var/data
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false

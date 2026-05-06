@@ -16,6 +16,16 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'sentinel-dev-secret';
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Render and other hosts terminate TLS upstream — trust X-Forwarded-* for HTTPS detection / cookies
+if (process.env.TRUST_PROXY === '1' || isProduction) {
+  app.set('trust proxy', 1);
+}
+
+if (isProduction && SESSION_SECRET === 'sentinel-dev-secret') {
+  console.warn('[warn] SESSION_SECRET is still the dev default; set SESSION_SECRET in production.');
+}
 
 app.use(express.json());
 
@@ -27,9 +37,15 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
+      secure: isProduction,
     },
   })
 );
+
+// Health check for Render / load balancers (no auth)
+app.get('/healthz', (req, res) => {
+  res.status(200).type('text/plain').send('ok');
+});
 
 // Public config for client-side base URL (QR codes, links) - must be before admin static
 app.get('/config.js', (req, res) => {
@@ -85,7 +101,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Sentinel admin server running at http://localhost:${PORT}`);
+  console.log(`Sentinel listening on port ${PORT}${isProduction ? ' (production)' : ''}`);
   logSmtpStartup();
 });
 
